@@ -31,3 +31,29 @@ body {
     @apply font-heading font-extrabold text-navy tracking-tight;
   }
 }
+
+
+/* Welcome screen animations */
+
+.welcome-enter {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.welcome-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 1.2s ease;
+}
+
+.welcome-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.welcome-exit-active {
+  opacity: 0;
+  transform: scale(1.05);
+  transition: all 1.2s ease;
+}
+
