@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AuthLayout from "../components/AuthLayout";
 import GoogleIcon from "../assets/google.svg";
 
@@ -9,9 +10,15 @@ const countries = [
 ];
 
 export default function Signup() {
+  const navigate = useNavigate();
+
   const [countryCode, setCountryCode] = useState("+91");
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
+
+  const handleGoogleAuth = () => {
+    alert("Google authentication will be enabled soon.");
+  };
 
   return (
     <AuthLayout>
@@ -50,7 +57,7 @@ export default function Signup() {
           ))}
         </select>
 
-        {/* Phone + Country Code */}
+        {/* Phone with country code */}
         <div className="flex items-center">
           <div className="px-4 py-3 bg-surface border border-r-0 border-gray-300 rounded-l-xl font-body">
             {countryCode}
@@ -131,17 +138,23 @@ export default function Signup() {
       </div>
 
       {/* Google Signup */}
-      <button className="w-full border border-gray-300 py-3 rounded-xl flex items-center justify-center gap-3 bg-white hover:bg-gray-50 transition">
+      <button
+        onClick={handleGoogleAuth}
+        className="w-full border border-gray-300 py-3 rounded-xl flex items-center justify-center gap-3 bg-white hover:bg-gray-50 transition"
+      >
         <img src={GoogleIcon} alt="Google" className="w-5 h-5" />
         <span className="font-heading font-semibold text-sm text-textPrimary">
-          Sign up with Google
+          Continue with Google
         </span>
       </button>
 
-      {/* Login Link */}
+      {/* Login link */}
       <p className="text-sm text-center text-textMuted mt-6">
         Already have an account?{" "}
-        <span className="text-navy font-semibold cursor-pointer">
+        <span
+          onClick={() => navigate("/login")}
+          className="text-navy font-semibold cursor-pointer"
+        >
           Log in
         </span>
       </p>
