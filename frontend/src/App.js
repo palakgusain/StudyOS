@@ -1,8 +1,65 @@
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Signup from "./pages/Signup";
+import Login from "./pages/Login";
+import Welcome from "./pages/Welcome";
+import Onboarding from "./pages/Onboarding";
+import ExamOnboardingChat from "./pages/ExamOnboardingChat";
+import ExamDetails from "./pages/ExamDetails";
 
+
+
+import RequireAuth from "./components/RequireAuth";
 
 function App() {
-  return <Signup />;
+  const isAuth = localStorage.getItem("isAuth") === "true";
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Public */}
+        <Route path="/signup" element={!isAuth ? <Signup /> : <Navigate to="/welcome" />} />
+        <Route path="/login" element={!isAuth ? <Login /> : <Navigate to="/welcome" />} />
+
+        {/* Protected */}
+        <Route
+          path="/welcome"
+          element={
+            <RequireAuth>
+              <Welcome />
+            </RequireAuth>
+          }
+        />
+          <Route
+  path="/onboarding"
+  element={
+    <RequireAuth>
+      <Onboarding />
+    </RequireAuth>
+  }
+/>
+            <Route
+  path="/onboarding/exam"
+  element={
+    <RequireAuth>
+      <ExamOnboardingChat />
+    </RequireAuth>
+  }
+/>
+    <Route
+  path="/exam-details"
+  element={
+    <RequireAuth>
+      <ExamDetails />
+    </RequireAuth>
+  }
+/>
+
+
+        {/* Default */}
+        <Route path="*" element={<Navigate to="/signup" />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
