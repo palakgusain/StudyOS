@@ -3,15 +3,22 @@ import { useNavigate } from "react-router-dom";
 
 export default function ExamDetails() {
   const navigate = useNavigate();
-  const syllabusRef = useRef(null);
   const datesheetRef = useRef(null);
 
   const [subjects, setSubjects] = useState([
-    { name: "Java", difficulty: "Hard", priority: true },
+    {
+      name: "Java",
+      difficulty: "Hard",
+      priority: true,
+      syllabus: null,
+    },
   ]);
 
   const addSubject = () => {
-    setSubjects([...subjects, { name: "", difficulty: "Medium", priority: false }]);
+    setSubjects([
+      ...subjects,
+      { name: "", difficulty: "Medium", priority: false, syllabus: null },
+    ]);
   };
 
   const updateSubject = (index, field, value) => {
@@ -26,7 +33,7 @@ export default function ExamDetails() {
 
   const handleGenerate = () => {
     localStorage.setItem("examDetails", JSON.stringify({ subjects }));
-    navigate("/dashboard");
+    navigate("/dashboard"); // later dashboard
   };
 
   return (
@@ -37,8 +44,8 @@ export default function ExamDetails() {
           Exam details
         </h1>
         <p className="font-body text-textMuted mb-8">
-          Add your subjects and upload exam documents.  
-          I’ll use this to create your study plan.
+          Add subjects and upload syllabus for each subject.  
+          Datesheet is required only once.
         </p>
 
         {/* SUBJECTS */}
@@ -55,89 +62,99 @@ export default function ExamDetails() {
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {subjects.map((sub, i) => (
               <div
                 key={i}
-                className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-surface rounded-2xl p-4"
+                className="bg-surface rounded-2xl p-5 space-y-4"
               >
-                <input
-                  type="text"
-                  value={sub.name}
-                  placeholder="Subject name"
-                  onChange={(e) => updateSubject(i, "name", e.target.value)}
-                  className="input"
-                />
-
-                <select
-                  value={sub.difficulty}
-                  onChange={(e) => updateSubject(i, "difficulty", e.target.value)}
-                  className="input"
-                >
-                  <option>Easy</option>
-                  <option>Medium</option>
-                  <option>Hard</option>
-                </select>
-
-                <label className="flex items-center gap-2 font-body text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                   <input
-                    type="checkbox"
-                    checked={sub.priority}
+                    type="text"
+                    value={sub.name}
+                    placeholder="Subject name"
                     onChange={(e) =>
-                      updateSubject(i, "priority", e.target.checked)
+                      updateSubject(i, "name", e.target.value)
+                    }
+                    className="input"
+                  />
+
+                  <select
+                    value={sub.difficulty}
+                    onChange={(e) =>
+                      updateSubject(i, "difficulty", e.target.value)
+                    }
+                    className="input"
+                  >
+                    <option>Easy</option>
+                    <option>Medium</option>
+                    <option>Hard</option>
+                  </select>
+
+                  <label className="flex items-center gap-2 font-body text-sm">
+                    <input
+                      type="checkbox"
+                      checked={sub.priority}
+                      onChange={(e) =>
+                        updateSubject(i, "priority", e.target.checked)
+                      }
+                    />
+                    High priority
+                  </label>
+
+                  <button
+                    onClick={() => removeSubject(i)}
+                    className="text-sm text-red-500 hover:underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                {/* SYLLABUS UPLOAD PER SUBJECT */}
+                <div className="flex items-center gap-4">
+                  <input
+                    type="file"
+                    className="hidden"
+                    id={`syllabus-${i}`}
+                    onChange={(e) =>
+                      updateSubject(i, "syllabus", e.target.files[0])
                     }
                   />
-                  High priority
-                </label>
 
-                <button
-                  onClick={() => removeSubject(i)}
-                  className="text-sm text-red-500 hover:underline"
-                >
-                  Remove
-                </button>
+                  <label
+                    htmlFor={`syllabus-${i}`}
+                    className="cursor-pointer btn-primary px-4 py-2 text-sm"
+                  >
+                    Upload syllabus
+                  </label>
+
+                  {sub.syllabus && (
+                    <span className="text-sm font-body text-textMuted">
+                      📄 {sub.syllabus.name}
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* UPLOADS */}
-        <div className="grid md:grid-cols-2 gap-6 mb-10">
-          {/* Syllabus */}
-          <div className="bg-white border rounded-3xl p-6">
-            <h3 className="font-heading font-bold text-lg mb-2">
-              Upload syllabus
-            </h3>
-            <p className="font-body text-sm text-textMuted mb-4">
-              PDF / image — optional but recommended
-            </p>
+        {/* DATE SHEET (ONCE) */}
+        <div className="bg-white border rounded-3xl p-6 mb-10">
+          <h3 className="font-heading font-bold text-lg mb-2">
+            Upload datesheet
+          </h3>
+          <p className="font-body text-sm text-textMuted mb-4">
+            One document containing the exam schedule
+          </p>
 
-            <input type="file" ref={syllabusRef} className="hidden" />
-            <button
-              onClick={() => syllabusRef.current.click()}
-              className="btn-primary w-full"
-            >
-              Upload syllabus
-            </button>
-          </div>
-
-          {/* Datesheet */}
-          <div className="bg-white border rounded-3xl p-6">
-            <h3 className="font-heading font-bold text-lg mb-2">
-              Upload datesheet
-            </h3>
-            <p className="font-body text-sm text-textMuted mb-4">
-              Exam schedule document
-            </p>
-
-            <input type="file" ref={datesheetRef} className="hidden" />
-            <button
-              onClick={() => datesheetRef.current.click()}
-              className="btn-primary w-full"
-            >
-              Upload datesheet
-            </button>
-          </div>
+          <input type="file" ref={datesheetRef} className="hidden" />
+          <button
+            onClick={() => datesheetRef.current.click()}
+            className="btn-primary w-full"
+          >
+            Upload datesheet
+          </button>
         </div>
 
         {/* CTA */}
