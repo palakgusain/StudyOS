@@ -6,6 +6,8 @@ import Onboarding from "./pages/Onboarding";
 import ExamOnboardingChat from "./pages/ExamOnboardingChat";
 import ExamDetails from "./pages/ExamDetails";
 import DailyOnboardingChat from "./pages/DailyOnboardingChat";
+import DailyDetails from "./pages/DailyDetails";
+import Dashboard from "./pages/Dashboard";
 
 
 
@@ -59,6 +61,22 @@ function App() {
   element={
     <RequireAuth>
       <DailyOnboardingChat />
+    </RequireAuth>
+  }
+/>
+<Route
+  path="/daily-details"
+  element={
+    <RequireAuth>
+      <DailyDetails />
+    </RequireAuth>
+  }
+/>
+<Route
+  path="/dashboard"
+  element={
+    <RequireAuth>
+      <Dashboard />
     </RequireAuth>
   }
 />

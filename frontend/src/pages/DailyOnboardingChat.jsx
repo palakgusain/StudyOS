@@ -79,7 +79,7 @@ export default function DailyOnboardingChat() {
             [currentStep.key]: input,
           })
         );
-        navigate("/dashboard"); // later daily dashboard
+        navigate("/daily-details"); // later daily dashboard
       }
     }, 800);
   };
