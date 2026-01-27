@@ -36,6 +36,9 @@ export default function ExamDetails() {
     navigate("/dashboard"); // later dashboard
   };
 
+  const [datesheet, setDatesheet] = useState(null);
+
+
   return (
     <div className="min-h-screen bg-paper px-6 py-10 flex justify-center">
       <div className="w-full max-w-4xl">
@@ -148,13 +151,26 @@ export default function ExamDetails() {
             One document containing the exam schedule
           </p>
 
-          <input type="file" ref={datesheetRef} className="hidden" />
-          <button
-            onClick={() => datesheetRef.current.click()}
-            className="btn-primary w-full"
-          >
-            Upload datesheet
-          </button>
+          <input
+  type="file"
+  ref={datesheetRef}
+  className="hidden"
+  onChange={(e) => setDatesheet(e.target.files[0])}
+/>
+
+<button
+  onClick={() => datesheetRef.current.click()}
+  className="btn-primary w-full"
+>
+  Upload datesheet
+</button>
+
+{datesheet && (
+  <p className="mt-3 text-sm font-body text-textMuted">
+    📅 {datesheet.name}
+  </p>
+)}
+
         </div>
 
         {/* CTA */}
