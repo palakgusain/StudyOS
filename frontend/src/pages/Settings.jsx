@@ -9,6 +9,7 @@ export default function Settings() {
   const [email, setEmail] = useState("");
   const [dailyHours, setDailyHours] = useState(4);
   const [snooze, setSnooze] = useState(30);
+  const [notifications, setNotifications] = useState(true);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user")) || {};
@@ -18,14 +19,21 @@ export default function Settings() {
     const prefs = JSON.parse(localStorage.getItem("prefs")) || {};
     setDailyHours(prefs.dailyHours || 4);
     setSnooze(prefs.snooze || 30);
+    setNotifications(prefs.notifications ?? true);
   }, []);
 
   const saveSettings = () => {
     localStorage.setItem("user", JSON.stringify({ name, email }));
+
     localStorage.setItem(
       "prefs",
-      JSON.stringify({ dailyHours, snooze })
+      JSON.stringify({
+        dailyHours,
+        snooze,
+        notifications,
+      })
     );
+
     alert("Settings saved");
   };
 
@@ -45,91 +53,69 @@ export default function Settings() {
       <ChatSidebar />
 
       <div className="flex-1 px-12 py-10 max-w-4xl">
-        <h1 className="text-3xl font-extrabold mb-8 text-slate-900 dark:text-white">
+        {/* PAGE TITLE */}
+        <h1 className="text-3xl font-extrabold mb-10 text-slate-900 dark:text-white">
           Settings
         </h1>
 
         {/* PROFILE */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 mb-6 border dark:border-slate-700">
-          <h2 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">
-            Profile
-          </h2>
-
+        <Section title="Profile">
           <div className="space-y-4">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Name"
-              className="w-full px-4 py-2 border rounded-xl
-                         bg-white dark:bg-slate-800
-                         text-slate-900 dark:text-white"
-            />
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              className="w-full px-4 py-2 border rounded-xl
-                         bg-white dark:bg-slate-800
-                         text-slate-900 dark:text-white"
-            />
+            <Input label="Name" value={name} setValue={setName} />
+            <Input label="Email" value={email} setValue={setEmail} />
           </div>
-        </div>
+        </Section>
 
         {/* STUDY PREFERENCES */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 mb-6 border dark:border-slate-700">
-          <h2 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">
-            Study Preferences
-          </h2>
-
-          <div className="space-y-4 text-slate-600 dark:text-slate-400">
-            <label className="block">
-              Daily study hours
-              <input
-                type="number"
-                value={dailyHours}
-                onChange={(e) =>
-                  setDailyHours(e.target.value)
-                }
-                className="w-full mt-1 px-4 py-2 border rounded-xl
-                           bg-white dark:bg-slate-800
-                           text-slate-900 dark:text-white"
-              />
-            </label>
-
-            <label className="block">
-              Default snooze (minutes)
-              <input
-                type="number"
-                value={snooze}
-                onChange={(e) => setSnooze(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border rounded-xl
-                           bg-white dark:bg-slate-800
-                           text-slate-900 dark:text-white"
-              />
-            </label>
+        <Section title="Study Preferences">
+          <div className="space-y-4">
+            <Input
+              label="Daily study hours"
+              type="number"
+              value={dailyHours}
+              setValue={setDailyHours}
+            />
+            <Input
+              label="Default snooze (minutes)"
+              type="number"
+              value={snooze}
+              setValue={setSnooze}
+            />
           </div>
-        </div>
+        </Section>
 
-        {/* THEME */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 mb-6 border dark:border-slate-700">
-          <h2 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">
-            Appearance
-          </h2>
+        {/* APPEARANCE */}
+        <Section title="Appearance">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-700 dark:text-slate-300">
+              Theme
+            </span>
 
-          <button
-            onClick={toggleTheme}
-            className="px-5 py-2 bg-indigo-600 text-white rounded-xl"
-          >
-            Toggle {theme === "dark" ? "Light" : "Dark"} Mode
-          </button>
-        </div>
+            <button
+              onClick={toggleTheme}
+              className="px-5 py-2 bg-indigo-600 text-white rounded-xl font-semibold"
+            >
+              {theme === "dark" ? "Light Mode" : "Dark Mode"}
+            </button>
+          </div>
+        </Section>
+
+        {/* NOTIFICATIONS */}
+        <Section title="Notifications">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-700 dark:text-slate-300">
+              Task reminders
+            </span>
+
+            <Toggle
+              enabled={notifications}
+              setEnabled={setNotifications}
+            />
+          </div>
+        </Section>
 
         {/* ACCOUNT */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border dark:border-slate-700">
-          <h2 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">
-            Account & Data
-          </h2>
-
+        <Section title="Account & Data">
           <div className="flex gap-4 flex-wrap">
             <button
               onClick={resetDay}
@@ -145,17 +131,64 @@ export default function Settings() {
               Clear All Data
             </button>
           </div>
-        </div>
+        </Section>
 
-        <div className="mt-8">
+        {/* SAVE BUTTON */}
+        <div className="mt-10">
           <button
             onClick={saveSettings}
-            className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-bold"
+            className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg"
           >
             Save Settings
           </button>
         </div>
       </div>
     </div>
+  );
+}
+
+/* ---------------- COMPONENTS ---------------- */
+
+function Section({ title, children }) {
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 mb-6 border dark:border-slate-700">
+      <h2 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">
+        {title}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+function Input({ label, value, setValue, type = "text" }) {
+  return (
+    <label className="block">
+      <span className="text-slate-600 dark:text-slate-400">
+        {label}
+      </span>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        className="w-full mt-1 px-4 py-2 border rounded-xl
+                   bg-white dark:bg-slate-800
+                   text-slate-900 dark:text-white"
+      />
+    </label>
+  );
+}
+
+function Toggle({ enabled, setEnabled }) {
+  return (
+    <button
+      onClick={() => setEnabled(!enabled)}
+      className={`w-12 h-7 flex items-center rounded-full p-1 transition
+        ${enabled ? "bg-indigo-600" : "bg-slate-300"}`}
+    >
+      <div
+        className={`bg-white w-5 h-5 rounded-full shadow-md transform transition
+          ${enabled ? "translate-x-5" : ""}`}
+      />
+    </button>
   );
 }
