@@ -1,5 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import ChatSidebar from "../components/ChatSidebar";
+import { useTheme } from "../context/ThemeContext";
+import { useSchedule } from "../context/ScheduleContext";
+import { useTaskEngine } from "../context/TaskEngineContext";
+import { useNavigate } from "react-router-dom";
+
 
 const PLAN = [
   { task: "DSA – Arrays practice", duration: 60 },
@@ -8,26 +13,22 @@ const PLAN = [
 ];
 
 export default function Dashboard() {
-  const user = JSON.parse(localStorage.getItem("user")) || { name: "Student" };
-  const isDailyUser = !!localStorage.getItem("dailyDetails");
+  const user =
+    JSON.parse(localStorage.getItem("user")) || { name: "Student" };
 
   /* ---------------- THEME ---------------- */
-  const [dark, setDark] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
-  useEffect(() => {
-    const theme = localStorage.getItem("theme");
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-      setDark(true);
-    }
-  }, []);
+  /* ---------------- SCHEDULE ---------------- */
+  const { schedule } = useSchedule();
 
-  const toggleTheme = () => {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
-  };
+  /* ---------------- TASK ENGINE (GLOBAL) ---------------- */
+  const { activeIndex, runningIndex, endTime, startTask } =
+    useTaskEngine();
+
+    const navigate = useNavigate();
+const [showRevisionPopup, setShowRevisionPopup] = useState(false);
+
 
   /* ---------------- GREETING ---------------- */
   const hour = new Date().getHours();
@@ -40,61 +41,64 @@ export default function Dashboard() {
       ? "Good evening"
       : "Good night";
 
-  /* ---------------- TASK STATE ---------------- */
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [runningIndex, setRunningIndex] = useState(null);
-  const [remainingSec, setRemainingSec] = useState(null);
-
-  const timerRef = useRef(null);
-
-  const startTask = (index) => {
-    if (timerRef.current) clearInterval(timerRef.current);
-
-    setRunningIndex(index);
-    setRemainingSec(PLAN[index].duration * 60);
-
-    timerRef.current = setInterval(() => {
-      setRemainingSec((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          setRunningIndex(null);
-          setRemainingSec(null);
-          setActiveIndex((i) => i + 1);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const nextStartsInMin =
-    runningIndex !== null
-      ? Math.ceil(PLAN[runningIndex].duration)
-      : null;
-
-  /* ---------------- PROGRESS RING ---------------- */
+  /* ---------------- PROGRESS ---------------- */
   const totalTasks = PLAN.length;
   const completedTasks = activeIndex;
-  const progress = Math.round((completedTasks / totalTasks) * 100);
+  const progress = Math.round(
+    (completedTasks / totalTasks) * 100
+  );
 
   const radius = 32;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (progress / 100) * circumference;
+  const offset =
+    circumference - (progress / 100) * circumference;
 
-  /* ---------------- STREAK + CALENDAR ---------------- */
-  const streak = 7; // mock
+  /* ---------------- STREAK ---------------- */
+  const [streak, setStreak] = useState(
+    Number(localStorage.getItem("streak")) || 7
+  );
+
+  useEffect(() => {
+    if (activeIndex === PLAN.length && PLAN.length > 0) {
+      localStorage.setItem("dayCompleted", "true");
+
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      localStorage.setItem("streak", newStreak);
+    }
+  }, [activeIndex]);
+
+  useEffect(() => {
+  if (activeIndex === PLAN.length && PLAN.length > 0) {
+    localStorage.setItem("dayCompleted", "true");
+    setShowRevisionPopup(true);
+  }
+}, [activeIndex]);
+
+
+  /* ---------------- RESET DAY (ON LOAD) ---------------- */
+  useEffect(() => {
+    localStorage.setItem("dayCompleted", "false");
+  }, []);
+
+  /* ---------------- CALENDAR ---------------- */
   const [showCalendar, setShowCalendar] = useState(false);
   const [monthOffset, setMonthOffset] = useState(0);
   const calendarRef = useRef(null);
 
   useEffect(() => {
     const outside = (e) => {
-      if (calendarRef.current && !calendarRef.current.contains(e.target)) {
+      if (
+        calendarRef.current &&
+        !calendarRef.current.contains(e.target)
+      ) {
         setShowCalendar(false);
       }
     };
-    if (showCalendar) document.addEventListener("mousedown", outside);
-    return () => document.removeEventListener("mousedown", outside);
+    if (showCalendar)
+      document.addEventListener("mousedown", outside);
+    return () =>
+      document.removeEventListener("mousedown", outside);
   }, [showCalendar]);
 
   const today = new Date();
@@ -103,11 +107,17 @@ export default function Dashboard() {
     today.getMonth() + monthOffset,
     1
   );
+
   const daysInMonth = new Date(
     viewDate.getFullYear(),
     viewDate.getMonth() + 1,
     0
   ).getDate();
+
+  /* ---------------- START TIMES FROM REMINDER ---------------- */
+  const studySchedule = schedule.filter(
+    (t) => t.title !== "Break"
+  );
 
   return (
     <div className="min-h-screen flex bg-[#f6f7fb] dark:bg-[#0b1220]">
@@ -160,77 +170,87 @@ export default function Dashboard() {
             </svg>
 
             {/* Streak */}
-            {isDailyUser && (
-              <div
-                className="cursor-pointer text-orange-500 font-semibold"
-                onClick={() => setShowCalendar(true)}
-              >
-                🔥 {streak}
-
-                {showCalendar && (
-                  <div
-                    ref={calendarRef}
-                    className="absolute right-0 top-12 bg-white dark:bg-slate-900
-                               border dark:border-slate-700 rounded-xl p-4
-                               shadow-lg w-72 z-50"
-                  >
-                    <div className="flex justify-between mb-3">
-                      <button onClick={() => setMonthOffset((m) => m - 1)}>
-                        ◀
-                      </button>
-                      <p className="font-semibold text-sm dark:text-white">
-                        {viewDate.toLocaleString("default", {
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </p>
-                      <button onClick={() => setMonthOffset((m) => m + 1)}>
-                        ▶
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-7 gap-2 text-xs">
-                      {[...Array(daysInMonth)].map((_, i) => (
-                        <div
-                          key={i}
-                          className={`h-8 w-8 flex items-center justify-center rounded-md
-                            ${
-                              i >= daysInMonth - streak
-                                ? "bg-orange-500 text-white"
-                                : "bg-slate-200 dark:bg-slate-700"
-                            }
-                          `}
-                        >
-                          {i + 1}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Theme */}
-            <button
-              onClick={toggleTheme}
-              className="w-10 h-10 rounded-full bg-white dark:bg-slate-800
-                         border dark:border-slate-700 flex items-center justify-center"
+            <div
+              className="cursor-pointer text-orange-500 font-semibold"
+              onClick={() => setShowCalendar(true)}
             >
-              {dark ? "🌙" : "☀️"}
+              🔥 {streak}
+
+              {showCalendar && (
+                <div
+                  ref={calendarRef}
+                  className="absolute right-0 top-12 bg-white dark:bg-slate-900
+                             border dark:border-slate-700 rounded-xl p-4
+                             shadow-lg w-72 z-50"
+                >
+                  <div className="flex justify-between mb-3">
+                    <button
+                      onClick={() =>
+                        setMonthOffset((m) => m - 1)
+                      }
+                    >
+                      ◀
+                    </button>
+                    <p className="font-semibold text-sm dark:text-white">
+                      {viewDate.toLocaleString("default", {
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                    <button
+                      onClick={() =>
+                        setMonthOffset((m) => m + 1)
+                      }
+                    >
+                      ▶
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-2 text-xs">
+                    {[...Array(daysInMonth)].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`h-8 w-8 flex items-center justify-center rounded-md
+                          ${
+                            i >= daysInMonth - streak
+                              ? "bg-orange-500 text-white"
+                              : "bg-slate-200 dark:bg-slate-700"
+                          }`}
+                      >
+                        {i + 1}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+
+            {/* Theme Toggle */}
+            <button onClick={toggleTheme}>
+              {theme === "dark" ? "🌙" : "☀️"}
             </button>
           </div>
         </div>
 
+        
+
         {/* TASK LIST */}
+        {!showRevisionPopup && (
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-3xl">
           <h2 className="text-xl font-bold mb-6 dark:text-white">
             Today’s plan
           </h2>
 
           {PLAN.map((item, i) => {
+            const scheduleTask = studySchedule[i];
+            const startTime = scheduleTask?.start;
+
             const isRunning = i === runningIndex;
             const isActive = i === activeIndex;
-            const isNext = runningIndex !== null && i === runningIndex + 1;
+            const isNext =
+              runningIndex !== null &&
+              i === runningIndex + 1;
 
             return (
               <div
@@ -243,9 +263,17 @@ export default function Dashboard() {
                   }
                 `}
               >
-                <p className="font-semibold dark:text-white">
-                  {item.task}
-                </p>
+                <div>
+                  <p className="font-semibold dark:text-white">
+                    {item.task}
+                  </p>
+
+                  {startTime && (
+                    <p className="text-xs text-slate-500">
+                      Starts at {startTime}
+                    </p>
+                  )}
+                </div>
 
                 {isRunning && (
                   <span className="text-indigo-600 font-semibold">
@@ -255,7 +283,9 @@ export default function Dashboard() {
 
                 {isActive && !isRunning && (
                   <button
-                    onClick={() => startTask(i)}
+                    onClick={() =>
+                      startTask(i, item.duration)
+                    }
                     className="px-5 py-2 bg-indigo-600 text-white rounded-xl font-semibold"
                   >
                     Start
@@ -264,7 +294,7 @@ export default function Dashboard() {
 
                 {isNext && (
                   <span className="text-slate-500">
-                    ⏳ Starts in {nextStartsInMin} min
+                    ⏳ Starts after current task
                   </span>
                 )}
 
@@ -275,8 +305,36 @@ export default function Dashboard() {
                 )}
               </div>
             );
+            
           })}
         </div>
+        
+        )}
+        {/* REVISION POPUP */}
+{showRevisionPopup && (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 text-center shadow-xl max-w-md w-full">
+      
+      <div className="text-5xl mb-4">📚</div>
+
+      <h2 className="text-2xl font-extrabold mb-2 dark:text-white">
+        Great work today
+      </h2>
+
+      <p className="text-slate-500 mb-6">
+        Let’s do a quick revision to lock it in.
+      </p>
+
+      <button
+        onClick={() => navigate("/revision")}
+        className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-lg"
+      >
+        Start Revision
+      </button>
+    </div>
+  </div>
+)}
+
       </div>
     </div>
   );
