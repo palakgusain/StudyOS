@@ -11,6 +11,11 @@ const countries = [
 
 export default function Signup() {
   const navigate = useNavigate();
+   const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [studyMode, setStudyMode] = useState("daily");
 
   const [countryCode, setCountryCode] = useState("+91");
   const [otpSent, setOtpSent] = useState(false);
@@ -20,27 +25,70 @@ export default function Signup() {
     alert("Google authentication will be enabled soon.");
   };
 
+
+const handleSignup = async (e) => {
+  e.preventDefault();
+
+  if (!otpVerified) {
+    alert("Please verify OTP first");
+    return;
+  }
+
+  if (!firstName || !lastName || !email || !password) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: `${firstName} ${lastName}`.trim(),
+        email,
+        password,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Signup failed");
+      return;
+    }
+
+    alert("Signup successful");
+    navigate("/login");
+  } catch (err) {
+    alert("Server error");
+  }
+};
+
+
+
   return (
     <AuthLayout>
       <h2 className="heading-lg text-2xl mb-6">
         Create your account
       </h2>
 
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={handleSignup}>
+
         {/* Name */}
         <div className="flex gap-3">
           <input
-            type="text"
-            placeholder="First name"
-            className="input w-1/2"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Last name"
-            className="input w-1/2"
-            required
-          />
+  placeholder="First name"
+  value={firstName}
+  onChange={(e) => setFirstName(e.target.value)}
+/>
+
+<input
+  placeholder="Last name"
+  value={lastName}
+  onChange={(e) => setLastName(e.target.value)}
+/>
         </div>
 
         {/* Country */}
@@ -100,19 +148,26 @@ export default function Signup() {
 
         {/* Email */}
         <input
-          type="email"
-          placeholder="Email address"
-          className="input"
-          required
-        />
+  type="email"
+  placeholder="Email address"
+  className="input"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  required
+/>
+
 
         {/* Password */}
-        <input
-          type="password"
-          placeholder="Create password"
-          className="input"
-          required
-        />
+<input
+  type="password"
+  placeholder="Create password"
+  className="input"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  required
+/>
+
+
 
         {/* Submit */}
         <button
@@ -161,3 +216,5 @@ export default function Signup() {
     </AuthLayout>
   );
 }
+localStorage.removeItem("isAuth");
+

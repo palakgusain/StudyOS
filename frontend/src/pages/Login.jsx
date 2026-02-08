@@ -2,13 +2,52 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import AuthLayout from "../components/AuthLayout";
 import GoogleIcon from "../assets/google.svg";
+import { useState } from "react";
+
+
 
 export default function Login() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleGoogleAuth = () => {
     alert("Google authentication will be enabled soon.");
   };
+
+  const handleLogin = async (e) => {
+  e.preventDefault();
+
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Login failed");
+      return;
+    }
+
+    // Save token and user
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.setItem("isAuth", "true");
+
+    navigate("/welcome");
+  } catch (err) {
+    alert("Server error");
+  }
+};
+
 
   return (
     <AuthLayout>
@@ -16,22 +55,25 @@ export default function Login() {
         Log in to your account
       </h2>
 
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={handleLogin}>
+
         {/* Email */}
         <input
-          type="email"
-          placeholder="Email address"
-          className="input"
-          required
-        />
+  type="email"
+  placeholder="Email"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  className="w-full mb-4 p-3 border rounded"
+/>
 
-        {/* Password */}
-        <input
-          type="password"
-          placeholder="Password"
-          className="input"
-          required
-        />
+<input
+  type="password"
+  placeholder="Password"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  className="w-full mb-6 p-3 border rounded"
+/>
+
 
         {/* Login Button */}
         <button

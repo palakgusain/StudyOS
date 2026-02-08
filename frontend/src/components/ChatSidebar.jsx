@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+const dayCompleted = localStorage.getItem("dayCompleted") === "true";
 
 export default function ChatSidebar() {
   const navigate = useNavigate();
@@ -37,12 +38,24 @@ export default function ChatSidebar() {
       <div className="flex-1" />
 
       {/* Revision (locked for now) */}
-      <div
-        className="text-xl opacity-30 cursor-not-allowed"
-        title="Revision (locked)"
-      >
-        📚
-      </div>
+      <button
+  onClick={() => {
+    if (dayCompleted) navigate("/revision");
+  }}
+  className={`text-xl transition ${
+    dayCompleted
+      ? "hover:scale-110 cursor-pointer"
+      : "opacity-30 cursor-not-allowed"
+  }`}
+  title={
+    dayCompleted
+      ? "Revision"
+      : "Complete today's plan to unlock revision"
+  }
+>
+  📚
+</button>
+
 
       {/* Settings (UNLOCKED) */}
       <button

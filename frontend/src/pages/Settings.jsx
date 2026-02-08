@@ -11,10 +11,18 @@ export default function Settings() {
   const [snooze, setSnooze] = useState(30);
   const [notifications, setNotifications] = useState(true);
 
+  // NEW: study mode
+  const [studyMode, setStudyMode] = useState("daily");
+
+  // NEW: password fields
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user")) || {};
     setName(user.name || "");
     setEmail(user.email || "");
+    setStudyMode(user.studyMode || "daily");
 
     const prefs = JSON.parse(localStorage.getItem("prefs")) || {};
     setDailyHours(prefs.dailyHours || 4);
@@ -23,7 +31,10 @@ export default function Settings() {
   }, []);
 
   const saveSettings = () => {
-    localStorage.setItem("user", JSON.stringify({ name, email }));
+    localStorage.setItem(
+      "user",
+      JSON.stringify({ name, email, studyMode })
+    );
 
     localStorage.setItem(
       "prefs",
@@ -35,6 +46,41 @@ export default function Settings() {
     );
 
     alert("Settings saved");
+  };
+
+  // NEW: password change
+  const handlePasswordChange = async () => {
+    if (!currentPassword || !newPassword) {
+      alert("Fill both password fields");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          currentPassword,
+          newPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message);
+        return;
+      }
+
+      alert("Password updated successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+    } catch (err) {
+      alert("Server error");
+    }
   };
 
   const resetDay = () => {
@@ -69,6 +115,23 @@ export default function Settings() {
         {/* STUDY PREFERENCES */}
         <Section title="Study Preferences">
           <div className="space-y-4">
+            {/* NEW: Study mode selector */}
+            <label className="block">
+              <span className="text-slate-600 dark:text-slate-400">
+                Study mode
+              </span>
+              <select
+                value={studyMode}
+                onChange={(e) => setStudyMode(e.target.value)}
+                className="w-full mt-1 px-4 py-2 border rounded-xl
+                           bg-white dark:bg-slate-800
+                           text-slate-900 dark:text-white"
+              >
+                <option value="daily">Daily discipline</option>
+                <option value="exam">Exam focused</option>
+              </select>
+            </label>
+
             <Input
               label="Daily study hours"
               type="number"
@@ -81,6 +144,31 @@ export default function Settings() {
               value={snooze}
               setValue={setSnooze}
             />
+          </div>
+        </Section>
+
+        {/* CHANGE PASSWORD */}
+        <Section title="Change Password">
+          <div className="space-y-4">
+            <Input
+              label="Current password"
+              type="password"
+              value={currentPassword}
+              setValue={setCurrentPassword}
+            />
+            <Input
+              label="New password"
+              type="password"
+              value={newPassword}
+              setValue={setNewPassword}
+            />
+
+            <button
+              onClick={handlePasswordChange}
+              className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-semibold"
+            >
+              Update Password
+            </button>
           </div>
         </Section>
 

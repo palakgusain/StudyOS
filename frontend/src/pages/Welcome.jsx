@@ -42,10 +42,10 @@ export default function Welcome() {
       setAnimateOut(true);
     }, 8500);
 
-    // redirect
     const redirectTimer = setTimeout(() => {
-      navigate("/signup"); // later -> onboarding/dashboard
-    }, 10000);
+  navigate("/onboarding");
+}, 10000);
+
 
     return () => {
       clearTimeout(exitTimer);

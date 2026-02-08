@@ -76,7 +76,7 @@ export default function ExamOnboardingChat() {
             [currentStep.key]: input,
           })
         );
-        navigate("/dashboard"); // later real dashboard
+        navigate("/exam-details"); // later real dashboard
       }
     }, 800);
   };
